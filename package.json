@@ -1,0 +1,19 @@
+{
+  "name": "cinespark",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Root scripts to start client and server together",
+  "scripts": {
+    "start": "node scripts/start.js",
+    "stop": "docker compose down",
+    "logs": "docker compose logs -f",
+    "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "client": "npm --prefix client run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
+
+
