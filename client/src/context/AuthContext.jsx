@@ -34,11 +34,14 @@ export function AuthProvider({ children }) {
     
     login: async (credentials) => {
       try {
+        console.log('🔐 AuthContext: Iniciando login...')
         setLoading(true)
         const response = await api.auth.login(credentials)
+        console.log('✅ AuthContext: Login exitoso, actualizando usuario')
         setUser(response.user)
         return response
       } catch (error) {
+        console.error('❌ AuthContext: Error en login:', error)
         throw error
       } finally {
         setLoading(false)

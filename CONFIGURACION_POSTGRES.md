@@ -170,3 +170,5 @@ psql -U postgres -d nombre_de_tu_base_de_datos -c "\d Usuarios"
 Una vez completados estos pasos, tu aplicación estará conectada a PostgreSQL y lista para usar.
 
 
+
+

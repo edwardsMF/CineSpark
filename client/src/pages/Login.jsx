@@ -24,10 +24,14 @@ export default function Login() {
     setLoading(true)
     setError('')
     
+    console.log('📝 Formulario enviado:', formData)
+    
     try {
-      await login(formData)
+      const result = await login(formData)
+      console.log('✅ Login exitoso:', result)
       navigate('/')
     } catch (error) {
+      console.error('❌ Error en login:', error)
       setError(error.message || 'Error al iniciar sesión')
     } finally {
       setLoading(false)

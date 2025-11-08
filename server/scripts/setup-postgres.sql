@@ -97,3 +97,5 @@ ON CONFLICT (correo) DO NOTHING;
 SELECT 'Tablas creadas exitosamente' as mensaje;
 
 
+
+

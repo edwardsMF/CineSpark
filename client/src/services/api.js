@@ -6,6 +6,7 @@ async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`
   
   const config = {
+    method: options.method || 'GET',
     headers: {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` })
@@ -13,28 +14,51 @@ async function apiRequest(endpoint, options = {}) {
     ...options
   }
 
+  // Si hay body, asegurarse de que esté en formato JSON string
+  if (options.body && typeof options.body === 'object') {
+    config.body = JSON.stringify(options.body)
+  } else if (options.body) {
+    config.body = options.body
+  }
+
   try {
+    console.log('🌐 API Request:', { url, method: config.method })
     const response = await fetch(url, config)
     
+    console.log('📥 API Response:', { status: response.status, ok: response.ok })
+    
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Error del servidor' }))
-      throw new Error(error.error || `HTTP ${response.status}`)
+      const errorData = await response.json().catch(() => ({ error: `Error HTTP ${response.status}` }))
+      console.error('❌ API Error:', errorData)
+      throw new Error(errorData.error || `HTTP ${response.status}`)
     }
     
-    return await response.json()
+    const data = await response.json()
+    console.log('✅ API Success:', data)
+    return data
   } catch (error) {
-    console.error('API Error:', error)
-    throw error
+    console.error('❌ API Request Error:', error)
+    if (error.message) {
+      throw error
+    }
+    throw new Error(error.message || 'Error de conexión con el servidor')
   }
 }
 
 export const api = {
   auth: {
     login: async ({ correo, contrasena }) => {
+      console.log('🔐 Intentando login:', { correo })
       const response = await apiRequest('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ correo, contrasena })
+        body: { correo, contrasena }
       })
+      
+      console.log('✅ Login response:', response)
+      
+      if (!response.token) {
+        throw new Error('No se recibió token del servidor')
+      }
       
       // Guardar token
       localStorage.setItem('token', response.token)
@@ -46,13 +70,14 @@ export const api = {
         correo: correo
       }
       
+      console.log('👤 Usuario logueado:', user)
       return { token: response.token, user }
     },
     
     register: async ({ nombre, correo, contrasena }) => {
       const response = await apiRequest('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ nombre, correo, contrasena })
+        body: { nombre, correo, contrasena }
       })
       return response
     },
