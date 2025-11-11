@@ -9,7 +9,30 @@ Tu API key de TMDb está funcionando correctamente:
 
 ## 🚀 Formas de Poblar el Catálogo
 
-### Opción 1: Script Automático (Recomendado)
+### Opción 1: Poblar por Género (Recomendado para filtros)
+
+Este script asegura que cada género tenga contenido disponible (películas y series):
+
+```bash
+cd server
+node scripts/popular-por-genero.js
+```
+
+**¿Qué hace?**
+- Busca películas y series populares para cada género
+- Agrega al menos 5 películas y 5 series por género
+- Usa la API de TMDb para obtener contenido real
+- Evita duplicados automáticamente
+
+**Géneros incluidos:**
+- Acción, Aventura, Animación, Comedia, Crimen
+- Documental, Drama, Familia, Fantasía, Historia
+- Terror, Música, Misterio, Romance, Ciencia Ficción
+- TV, Suspense, Guerra, Western
+
+**Nota:** Este proceso puede tardar varios minutos debido a los límites de la API de TMDb.
+
+### Opción 2: Script Automático (Población general)
 
 **Prerrequisitos:**
 1. El servidor debe estar corriendo (`npm run dev` en otra terminal)

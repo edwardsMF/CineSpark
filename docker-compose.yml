@@ -1,21 +1,6 @@
 version: '3.8'
 
 services:
-  # BASE DE DATOS ORACLE COMENTADA - USANDO DATOS MOCK
-  # oracle:
-  #   image: container-registry.oracle.com/database/express:21.3.0-xe
-    #   container_name: cinespark-oracle
-  #   environment:
-  #     - ORACLE_PWD=Oracle123
-  #     - ORACLE_CHARACTERSET=AL32UTF8
-  #   ports:
-  #     - "1521:1521"
-  #     - "5500:5500"
-  #   volumes:
-  #     - oracle-data:/opt/oracle/oradata
-    #   networks:
-    #     - cinespark-network
-
   # Backend Node.js
   backend:
     build:
@@ -26,15 +11,8 @@ services:
       - NODE_ENV=production
       - PORT=4000
       - JWT_SECRET=ClaveUltraSeguraCineSpark2024
-      # VARIABLES DE ORACLE COMENTADAS - USANDO DATOS MOCK
-      # - ORACLE_USER=HR
-      # - ORACLE_PASSWORD=Oracle123
-      # - ORACLE_CONNECT_STRING=oracle:1521/XE
     ports:
       - "4000:4000"
-    # DEPENDENCIA DE ORACLE COMENTADA
-    # depends_on:
-    #   - oracle
     networks:
       - cinespark-network
     volumes:
@@ -53,10 +31,6 @@ services:
       - backend
     networks:
       - cinespark-network
-
-# VOLUMEN DE ORACLE COMENTADO
-# volumes:
-#   oracle-data:
 
 networks:
   cinespark-network:

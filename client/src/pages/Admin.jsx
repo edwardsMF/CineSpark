@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { api } from '../services/api.js'
 
@@ -9,6 +9,7 @@ export default function Admin() {
   const [tickets, setTickets] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const movieFormRef = useRef(null)
 
   // Estados para formularios
   const [movieForm, setMovieForm] = useState({
@@ -93,6 +94,19 @@ export default function Admin() {
       descripcion: movie.descripcion || '',
       imagen: movie.imagen || ''
     })
+    
+    // Asegurar que estamos en la pestaña de películas
+    setActiveTab('movies')
+    
+    // Hacer scroll al formulario después de un pequeño delay para que el estado se actualice
+    setTimeout(() => {
+      if (movieFormRef.current) {
+        movieFormRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        })
+      }
+    }, 100)
   }
 
   if (!isAdmin) {
@@ -216,7 +230,7 @@ export default function Admin() {
       {activeTab === 'movies' && (
         <div className="space-y-6">
           {/* Add/Edit Movie Form */}
-          <div className="card">
+          <div ref={movieFormRef} className="card">
             <div className="card-header">
               <h3 className="text-lg font-semibold">
                 {editingMovie ? 'Editar Película' : 'Agregar Nueva Película'}

@@ -39,7 +39,7 @@ async function start() {
   }
 
   console.log('Docker not available. Falling back to dev mode.');
-  // Try full dev (server + client). If server fails (e.g., Oracle not installed), at least run client.
+  // Try full dev (server + client). If server fails, at least run client.
   try {
     await run('npm', ['run', 'dev']);
   } catch (err) {
