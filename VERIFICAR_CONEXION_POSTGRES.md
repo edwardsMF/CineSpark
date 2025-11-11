@@ -196,3 +196,5 @@ tail -f backend.log
 4. **Prueba con otro cliente:**
    - Intenta conectarte con pgAdmin o DBeaver usando las mismas credenciales
 
+
+
