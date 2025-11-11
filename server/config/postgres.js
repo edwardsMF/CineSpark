@@ -17,7 +17,8 @@ export async function initPostgresPool() {
     port: process.env.POSTGRES_PORT || 5432,
     max: 20, // Máximo de conexiones en el pool
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000, // Aumentado a 10 segundos
+    statement_timeout: 30000, // Timeout para queries (30 segundos)
   };
 
   if (!config.user || !config.password || !config.database) {
@@ -28,8 +29,9 @@ export async function initPostgresPool() {
 
   // Manejo de errores del pool
   pool.on('error', (err, client) => {
-    console.error('Unexpected error on idle client', err);
-    process.exit(-1);
+    console.error('⚠️  Error en cliente inactivo del pool:', err.message);
+    // No cerrar el proceso, solo loggear el error
+    // El pool se encargará de recrear la conexión si es necesario
   });
 
   // Probar la conexión
@@ -67,23 +69,71 @@ export async function getConnection() {
  * Ejecuta una query y retorna el resultado
  */
 export async function query(text, params) {
-  if (!pool) await initPostgresPool();
-  const start = Date.now();
-  try {
-    const res = await pool.query(text, params);
-    const duration = Date.now() - start;
-    // Solo loggear queries lentas o importantes
-    if (duration > 100 || process.env.DEBUG_QUERIES === 'true') {
-      console.log('Query ejecutada', { text: text.substring(0, 100), duration, rows: res.rowCount });
+  // Asegurar que el pool esté inicializado
+  if (!pool) {
+    try {
+      await initPostgresPool();
+    } catch (err) {
+      console.error('❌ Error al inicializar pool:', err.message);
+      throw err;
     }
-    return res;
-  } catch (error) {
-    console.error('❌ Error ejecutando query:', { 
-      text: text.substring(0, 200), 
-      params: params ? params.map(p => typeof p === 'string' ? p.substring(0, 50) : p) : null,
-      error: error.message 
-    });
-    throw error;
+  }
+  
+  const start = Date.now();
+  let retries = 0;
+  const maxRetries = 2;
+  
+  while (retries <= maxRetries) {
+    try {
+      const res = await pool.query(text, params);
+      const duration = Date.now() - start;
+      // Solo loggear queries lentas o importantes
+      if (duration > 100 || process.env.DEBUG_QUERIES === 'true') {
+        console.log('Query ejecutada', { text: text.substring(0, 100), duration, rows: res.rowCount });
+      }
+      return res;
+    } catch (error) {
+      // Si es un error de conexión y tenemos reintentos, intentar reconectar
+      if (retries < maxRetries && (
+        error.code === 'ECONNREFUSED' || 
+        error.code === 'ETIMEDOUT' ||
+        error.message.includes('Connection terminated') ||
+        error.message.includes('Connection ended')
+      )) {
+        retries++;
+        console.warn(`⚠️  Error de conexión (intento ${retries}/${maxRetries}), reintentando...`);
+        // Resetear el pool para forzar reconexión
+        if (pool) {
+          try {
+            await pool.end();
+          } catch (e) {
+            // Ignorar errores al cerrar
+          }
+          pool = undefined;
+        }
+        // Esperar un poco antes de reintentar
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Reintentar inicializar el pool
+        try {
+          await initPostgresPool();
+        } catch (err) {
+          if (retries >= maxRetries) {
+            throw err;
+          }
+          continue;
+        }
+        continue;
+      }
+      
+      // Si no es un error de conexión o ya agotamos los reintentos, lanzar el error
+      console.error('❌ Error ejecutando query:', { 
+        text: text.substring(0, 200), 
+        params: params ? params.map(p => typeof p === 'string' ? p.substring(0, 50) : p) : null,
+        error: error.message,
+        code: error.code
+      });
+      throw error;
+    }
   }
 }
 
